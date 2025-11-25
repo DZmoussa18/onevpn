@@ -357,7 +357,7 @@
 
   async function fetchCurrentData() {
     const ids = Object.values(coins).map(c => c.id).join(",");
-    const url = `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true`;
+    const url = `https://api.allorigins.win/raw?url=https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,solana,cardano,polygon&vs_currencies=usd`;
     try {
       const res = await fetch(url);
       const data = await res.json();
@@ -395,7 +395,7 @@
 
   async function fetchChartData(coinKey) {
     const cfg = coins[coinKey];
-    const url = `https://api.coingecko.com/api/v3/coins/${cfg.id}/market_chart?vs_currency=usd&days=1&interval=hourly`;
+    const url = `https://api.allorigins.win/raw?url=https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,solana,cardano,polygon&vs_currencies=usd`;
     try {
       const res = await fetch(url);
       const data = await res.json();
