@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Crypto Dashboard</title>
+
+  <!--     () -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet" />
+
+  <!-- Chart.js  -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Poppins", sans-serif;
+      background: radial-gradient(circle at top, #111827 0, #020617 45%, #000 100%);
+      color: #e5e7eb;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      padding: 20px 5vw 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      backdrop-filter: blur(8px);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .logo {
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .logo span {
+      color: #22d3ee;
+    }
+
+    .badge {
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: rgba(34, 211, 238, 0.15);
+      border: 1px solid rgba(34, 211, 238, 0.5);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .last-update {
+      font-size: 12px;
+      opacity: 0.7;
+    }
+
+    main {
+      padding: 10px 5vw 40px;
+      flex: 1;
+    }
+
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 18px;
+      margin-bottom: 30px;
+    }
+
+    .card {
+      background: radial-gradient(circle at top left, #1f2937 0, #020617 55%);
+      border-radius: 18px;
+      padding: 16px 16px 14px;
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.8);
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform 0.25s ease, box-shadow 0.25s ease, border 0.25s ease;
+      transform-origin: center;
+    }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      inset: -40%;
+      background: radial-gradient(circle at top, rgba(56, 189, 248, 0.08), transparent 55%);
+      opacity: 0;
+      transition: opacity 0.35s ease;
+      pointer-events: none;
+    }
+
+    .card:hover {
+      transform: translateY(-4px) scale(1.01);
+      box-shadow: 0 25px 55px rgba(15, 23, 42, 0.95);
+      border-color: rgba(56, 189, 248, 0.5);
+    }
+
+    .card:hover::before {
+      opacity: 1;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .coin-name {
+      font-size: 14px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #9ca3af;
+    }
+
+    .coin-symbol {
+      font-size: 11px;
+      opacity: 0.8;
+    }
+
+    .chip {
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(148, 163, 184, 0.5);
+    }
+
+    .price-row {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+
+    .price {
+      font-size: 26px;
+      font-weight: 600;
+      color: #f9fafb;
+    }
+
+    .price span {
+      font-size: 16px;
+      opacity: 0.7;
+      margin-left: 2px;
+    }
+
+    .change {
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .change.up {
+      color: #4ade80;
+    }
+
+    .change.down {
+      color: #f97373;
+    }
+
+    .sub-info {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 6px;
+      font-size: 11px;
+      opacity: 0.8;
+    }
+
+    .sub-info div span {
+      color: #9ca3af;
+    }
+
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+
+    .chart-card {
+      background: radial-gradient(circle at top left, #020617 0, #000 65%);
+      border-radius: 18px;
+      padding: 14px 16px 18px;
+      border: 1px solid rgba(30, 64, 175, 0.6);
+      box-shadow: 0 20px 45px rgba(15, 23, 42, 0.9);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .chart-title {
+      font-size: 13px;
+      margin-bottom: 4px;
+      letter-spacing: 0.5px;
+      color: #cbd5f5;
+    }
+
+    .chart-subtitle {
+      font-size: 11px;
+      opacity: 0.7;
+      margin-bottom: 8px;
+    }
+
+    canvas {
+      max-height: 220px;
+    }
+
+    @media (max-width: 768px) {
+      header {
+        flex-direction: column;
+        gap: 8px;
+        align-items: flex-start;
+      }
+      .cards-grid {
+        grid-template-columns: 1fr;
+      }
+      .charts-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+<header>
+  <div class="logo">
+    <span></span> Crypto Monitor
+    <div class="badge">Live Tracker</div>
+  </div>
+  <div class="last-update" id="globalUpdated">Last update: --:--:--</div>
+</header>
+
+<main>
+  <!--    -->
+  <section class="cards-grid">
+    <div class="card" id="card-sol">
+      <div class="card-header">
+        <div>
+          <div class="coin-name">Solana <span class="coin-symbol">(SOL)</span></div>
+        </div>
+        <div class="chip">Layer 1</div>
+      </div>
+      <div class="price-row">
+        <div class="price" id="sol-price">$ --</div>
+        <div class="change" id="sol-change">--%</div>
+      </div>
+      <div class="sub-info">
+        <div>24h High: <span id="sol-high">--</span></div>
+        <div>24h Low: <span id="sol-low">--</span></div>
+      </div>
+    </div>
+
+    <div class="card" id="card-pol">
+      <div class="card-header">
+        <div>
+          <div class="coin-name">Polygon (POL)</div>
+        </div>
+        <div class="chip">Scaling</div>
+      </div>
+      <div class="price-row">
+        <div class="price" id="pol-price">$ --</div>
+        <div class="change" id="pol-change">--%</div>
+      </div>
+      <div class="sub-info">
+        <div>24h High: <span id="pol-high">--</span></div>
+        <div>24h Low: <span id="pol-low">--</span></div>
+      </div>
+    </div>
+
+    <div class="card" id="card-btc">
+      <div class="card-header">
+        <div>
+          <div class="coin-name">Bitcoin (BTC)</div>
+        </div>
+        <div class="chip">King</div>
+      </div>
+      <div class="price-row">
+        <div class="price" id="btc-price">$ --</div>
+        <div class="change" id="btc-change">--%</div>
+      </div>
+      <div class="sub-info">
+        <div>24h High: <span id="btc-high">--</span></div>
+        <div>24h Low: <span id="btc-low">--</span></div>
+      </div>
+    </div>
+
+    <div class="card" id="card-ada">
+      <div class="card-header">
+        <div>
+          <div class="coin-name">Cardano (ADA)</div>
+        </div>
+        <div class="chip">Smart Contracts</div>
+      </div>
+      <div class="price-row">
+        <div class="price" id="ada-price">$ --</div>
+        <div class="change" id="ada-change">--%</div>
+      </div>
+      <div class="sub-info">
+        <div>24h High: <span id="ada-high">--</span></div>
+        <div>24h Low: <span id="ada-low">--</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!--   -->
+  <section class="charts-grid">
+    <div class="chart-card">
+      <div class="chart-title">SOL / USD</div>
+      <div class="chart-subtitle">Last 24h</div>
+      <canvas id="chart-sol"></canvas>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-title">POL / USD</div>
+      <div class="chart-subtitle">Last 24h</div>
+      <canvas id="chart-pol"></canvas>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-title">BTC / USD</div>
+      <div class="chart-subtitle">Last 24h</div>
+      <canvas id="chart-btc"></canvas>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-title">ADA / USD</div>
+      <div class="chart-subtitle">Last 24h</div>
+      <canvas id="chart-ada"></canvas>
+    </div>
+  </section>
+</main>
+
+<script>
+  //    IDs  CoinGecko
+  const coins = {
+    sol: { id: "solana", priceEl: "sol-price", changeEl: "sol-change", highEl: "sol-high", lowEl: "sol-low", cardId: "card-sol", chartId: "chart-sol" },
+    pol: { id: "polygon-ecosystem-token", priceEl: "pol-price", changeEl: "pol-change", highEl: "pol-high", lowEl: "pol-low", cardId: "card-pol", chartId: "chart-pol" },
+    btc: { id: "bitcoin", priceEl: "btc-price", changeEl: "btc-change", highEl: "btc-high", lowEl: "btc-low", cardId: "card-btc", chartId: "chart-btc" },
+    ada: { id: "cardano", priceEl: "ada-price", changeEl: "ada-change", highEl: "ada-high", lowEl: "ada-low", cardId: "card-ada", chartId: "chart-ada" }
+  };
+
+  const charts = {};
+
+  function formatUsd(v) {
+    if (v >= 1000) return v.toLocaleString(undefined, { maximumFractionDigits: 2 });
+    return v.toFixed(4).replace(/0+$/,'').replace(/\.$/,'');
+  }
+
+  async function fetchCurrentData() {
+    const ids = Object.values(coins).map(c => c.id).join(",");
+    const url = `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true`;
+    try {
+      const res = await fetch(url);
+      const data = await res.json();
+
+      Object.entries(coins).forEach(([key, cfg]) => {
+        const coinData = data[cfg.id];
+        if (!coinData) return;
+
+        const price = coinData.usd;
+        const change24 = coinData.usd_24h_change || 0;
+
+        const priceEl = document.getElementById(cfg.priceEl);
+        const changeEl = document.getElementById(cfg.changeEl);
+
+        priceEl.textContent = `$ ${formatUsd(price)}`;
+        changeEl.textContent = `${change24.toFixed(2)}%`;
+
+        changeEl.classList.remove("up", "down");
+        if (change24 > 0) {
+          changeEl.classList.add("up");
+        } else if (change24 < 0) {
+          changeEl.classList.add("down");
+        }
+
+        // high/low  market_chart ( )
+      });
+
+      document.getElementById("globalUpdated").textContent =
+        "Last update: " + new Date().toLocaleTimeString();
+
+    } catch (err) {
+      console.error("Error current data:", err);
+    }
+  }
+
+  async function fetchChartData(coinKey) {
+    const cfg = coins[coinKey];
+    const url = `https://api.coingecko.com/api/v3/coins/${cfg.id}/market_chart?vs_currency=usd&days=1&interval=hourly`;
+    try {
+      const res = await fetch(url);
+      const data = await res.json();
+
+      const prices = data.prices || [];
+      const labels = prices.map(p => {
+        const d = new Date(p[0]);
+        return d.getHours() + ":" + String(d.getMinutes()).padStart(2, "0");
+      });
+      const values = prices.map(p => p[1]);
+
+      // High / Low  24 
+      if (values.length > 0) {
+        const high = Math.max(...values);
+        const low = Math.min(...values);
+        document.getElementById(cfg.highEl).textContent = `$ ${formatUsd(high)}`;
+        document.getElementById(cfg.lowEl).textContent = `$ ${formatUsd(low)}`;
+      }
+
+      //    
+      const ctx = document.getElementById(cfg.chartId).getContext("2d");
+
+      if (charts[coinKey]) {
+        charts[coinKey].data.labels = labels;
+        charts[coinKey].data.datasets[0].data = values;
+        charts[coinKey].update();
+      } else {
+        charts[coinKey] = new Chart(ctx, {
+          type: "line",
+          data: {
+            labels,
+            datasets: [
+              {
+                label: coinKey.toUpperCase(),
+                data: values,
+                borderWidth: 2,
+                tension: 0.3,
+                pointRadius: 0,
+                borderColor: "rgba(56, 189, 248, 0.9)",
+                fill: true,
+                backgroundColor: "rgba(56, 189, 248, 0.07)"
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              x: {
+                ticks: { color: "#9ca3af", maxTicksLimit: 6 },
+                grid: { display: false }
+              },
+              y: {
+                ticks: { color: "#9ca3af" },
+                grid: { color: "rgba(55,65,81,0.4)" }
+              }
+            },
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                mode: "index",
+                intersect: false,
+                callbacks: {
+                  label: (ctx) => ` $ ${formatUsd(ctx.parsed.y)}`
+                }
+              }
+            },
+            interaction: {
+              mode: "index",
+              intersect: false
+            }
+          }
+        });
+      }
+    } catch (err) {
+      console.error("Error chart data for", coinKey, err);
+    }
+  }
+
+  async function refreshAll() {
+    await fetchCurrentData();
+    await Promise.all([
+      fetchChartData("sol"),
+      fetchChartData("pol"),
+      fetchChartData("btc"),
+      fetchChartData("ada")
+    ]);
+  }
+
+  //      60 
+  refreshAll();
+  setInterval(refreshAll, 60000);
+</script>
+</body>
+</html>
